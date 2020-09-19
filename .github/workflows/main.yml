@@ -1,0 +1,46 @@
+# vim: expandtab tabstop=2 
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  schedule:
+    # Weekly
+    - cron: '0 0 * * 0'
+
+
+jobs:
+  package:
+    name: "Package Ghidra"
+    strategy:
+      matrix:
+        ghidra:
+          - version: "9.1.2"
+            url: "https://ghidra-sre.org/ghidra_9.1.2_PUBLIC_20200212.zip"
+          - version: "9.1.1"
+            url: "https://ghidra-sre.org/ghidra_9.1.1_PUBLIC_20191218.zip"
+          - version: "9.1"
+            url: "https://ghidra-sre.org/ghidra_9.1_PUBLIC_20191023.zip"
+          - version: "9.0.2"
+            url: "https://ghidra-sre.org/ghidra_9.0.2_PUBLIC_20190403.zip"
+    container: python:3.7-alpine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install CDR kit to create Disk Images
+        shell: sh
+        run: apk add cdrkit
+      - name: Install dependencies
+        shell: sh
+        run: pip install -r requirements.txt
+      - name: Download and package Ghidra
+        shell: sh
+        run: ./update.py --dmg --url "${{ matrix.ghidra.url }}" --version "${{ matrix.ghidra.version }}"
+      - name: "Upload package"
+        uses: actions/upload-artifact@v2
+        with:
+          name: Ghidra ${{ matrix.ghidra.version }}
+          path: "*.dmg"
+

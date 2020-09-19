@@ -17,7 +17,7 @@ parser.add_argument('-d', '--dmg', action='store_true',
                     help='Construct a DMG file for distribution')
 parser.add_argument('-t', '--tar', action='store_true',
                     help='Construct a tar file for distribution')
-parser.add_argument('-v', '--set-version', dest='version',
+parser.add_argument('-v', '--version', dest='version',
                     help='Set the version for the dmg. Eg: "9.1 BETA"')
 
 args = parser.parse_args()
