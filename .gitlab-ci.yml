@@ -1,0 +1,44 @@
+stages:
+    - dmg
+
+.dmg:
+    image: python:3.7-alpine
+    stage: dmg
+    script:
+        # Add genisoimage
+        - apk add cdrkit
+        - pip install -r requirements.txt
+        - ./update.py -u "${URL}" -d -v "${VERSION}"
+    artifacts:
+        paths:
+            - '*.dmg'
+
+Ghidra 9.1.2:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.1.2_PUBLIC_20200212.zip
+        VERSION: "9.1.2"
+
+Ghidra 9.1.1:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.1.1_PUBLIC_20191218.zip
+        VERSION: "9.1.1"
+
+Ghidra 9.1:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.1_PUBLIC_20191023.zip
+        VERSION: "9.1"
+
+Ghidra 9.0.2:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.0.2_PUBLIC_20190403.zip
+        VERSION: 9.0.2
+
+Ghidra 9.0.1:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.0.1_PUBLIC_20190325.zip
+        VERSION: 9.0.1
