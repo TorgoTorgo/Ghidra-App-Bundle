@@ -9,6 +9,9 @@ import subprocess
 import sys
 import tempfile
 import requests
+from pathlib import Path
+
+import plistlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', help='Ghidra zip URL')
@@ -24,7 +27,21 @@ args = parser.parse_args()
 with tempfile.TemporaryDirectory() as tmp_dir:
     shutil.copytree('Ghidra.app', os.path.join(tmp_dir, 'Ghidra.app'))
     os.symlink('/Applications', os.path.join(tmp_dir, 'Applications'))
-    dest_path = os.path.join(tmp_dir, 'Ghidra.app', 'Contents', 'Resources')
+
+    out_app = Path(tmp_dir, 'Ghidra.app')
+    contents_path = out_app.joinpath('Contents')
+    dest_path = contents_path.joinpath('Resources')
+
+    if args.version:
+        # Set the version in the plist if possible
+        print(f"[+] Setting bundle version to {args.version.split()[0]}")
+        with open(contents_path.joinpath('Info.plist'), 'rb') as plist_file:
+            info = plistlib.loads(plist_file.read())
+        info['CFBundleVersion'] = args.version.split()[0]
+        with open(contents_path.joinpath('Info.plist'), 'wb') as plist_file:
+            plistlib.dump(info, plist_file)
+
+
     if args.url:
         print("[+] Downloading {}".format(args.url))
         download = requests.get(args.url)
