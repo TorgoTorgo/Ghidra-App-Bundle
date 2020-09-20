@@ -6,5 +6,9 @@
     <string>ghidra</string>
     <key>CFBundleIconFile</key>
     <string>Ghidra</string>
+    <key>CFBundleIdentifier</key>
+    <string>gov.nsa.ghidra</string>
+    <key>CFBundleDisplayName</key>
+    <string>Ghidra</string>
 </dict>
 </plist>
