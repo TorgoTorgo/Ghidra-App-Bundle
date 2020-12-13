@@ -34,6 +34,7 @@ with tempfile.TemporaryDirectory() as tmp_dir:
     out_app = Path(tmp_dir, 'Ghidra.app')
     contents_path = out_app.joinpath('Contents')
     dest_path = contents_path.joinpath('Resources')
+    ghidra_content = None
 
     if args.version:
         # Set the version in the plist if possible
@@ -58,6 +59,15 @@ with tempfile.TemporaryDirectory() as tmp_dir:
     else:
         print("[!] Neither path nor url were specified!")
         sys.exit(1)
+
+    if args.url:
+       print("[+] Extracting...")
+       with tempfile.TemporaryDirectory() as zip_dir:
+           zip_path = os.path.join(zip_dir, 'Ghidra.zip')
+           with open(zip_path, 'wb') as f:
+               f.write(ghidra_content)
+           subprocess.run(f'unzip -d "{dest_path}" "{zip_path}"', shell=True)
+       print("[+] Extracted to {}".format(dest_path))
 
     if args.path:
         if args.path.is_file():
