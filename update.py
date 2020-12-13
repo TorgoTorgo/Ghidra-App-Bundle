@@ -59,21 +59,22 @@ with tempfile.TemporaryDirectory() as tmp_dir:
         print("[!] Neither path nor url were specified!")
         sys.exit(1)
 
-    if args.path.is_file():
-        print("[+] Opening {}".format(args.path))
-        with open(args.path, 'rb') as f:
-            ghidra_content = f.read()
-        print("[+] Extracting...")
-        with tempfile.TemporaryDirectory() as zip_dir:
-            zip_path = os.path.join(zip_dir, 'Ghidra.zip')
-            with open(zip_path, 'wb') as f:
-                f.write(ghidra_content)
-            subprocess.run(f'unzip -d "{dest_path}" "{zip_path}"', shell=True)
-        print("[+] Extracted to {}".format(dest_path))
-    elif args.path.is_dir():
-        print("[+] Copying...")
-        shutil.copytree(args.path, dest_path / args.path.name)
-        print("[+] Copied to {}".format(dest_path / args.path.name))
+    if args.path:
+        if args.path.is_file():
+            print("[+] Opening {}".format(args.path))
+            with open(args.path, 'rb') as f:
+                ghidra_content = f.read()
+            print("[+] Extracting...")
+            with tempfile.TemporaryDirectory() as zip_dir:
+                zip_path = os.path.join(zip_dir, 'Ghidra.zip')
+                with open(zip_path, 'wb') as f:
+                    f.write(ghidra_content)
+                subprocess.run(f'unzip -d "{dest_path}" "{zip_path}"', shell=True)
+            print("[+] Extracted to {}".format(dest_path))
+        elif args.path.is_dir():
+            print("[+] Copying...")
+            shutil.copytree(args.path, dest_path / args.path.name)
+            print("[+] Copied to {}".format(dest_path / args.path.name))
 
     if args.jdk:
         jdk_path = dest_path / "jdk"
