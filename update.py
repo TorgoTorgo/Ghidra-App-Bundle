@@ -15,13 +15,16 @@ import plistlib
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', help='Ghidra zip URL')
-parser.add_argument('-p', '--path', help='Path to Ghidra zip')
+parser.add_argument(
+    '-p', '--path', help='Path to Ghidra zip or install', type=Path)
 parser.add_argument('-d', '--dmg', action='store_true',
                     help='Construct a DMG file for distribution')
 parser.add_argument('-t', '--tar', action='store_true',
                     help='Construct a tar file for distribution')
 parser.add_argument('-v', '--version', dest='version',
                     help='Set the version for the dmg. Eg: "9.1 BETA"')
+parser.add_argument(
+    '-j', '--jdk', help='Path to a JDK directory to bundle', type=Path)
 
 args = parser.parse_args()
 with tempfile.TemporaryDirectory() as tmp_dir:
@@ -41,7 +44,6 @@ with tempfile.TemporaryDirectory() as tmp_dir:
         with open(contents_path.joinpath('Info.plist'), 'wb') as plist_file:
             plistlib.dump(info, plist_file)
 
-
     if args.url:
         print("[+] Downloading {}".format(args.url))
         download = requests.get(args.url)
@@ -52,20 +54,45 @@ with tempfile.TemporaryDirectory() as tmp_dir:
             print('[!] Failed to download!')
             sys.exit(1)
     elif args.path:
-        print("[+] Opening {}".format(args.path))
-        with open(args.path, 'rb') as f:
-            ghidra_content = f.read()
+        print("[-] Will use Ghidra from {}".format(args.path))
     else:
         print("[!] Neither path nor url were specified!")
         sys.exit(1)
 
-    print("[+] Extracting...")
-    with tempfile.TemporaryDirectory() as zip_dir:
-        zip_path = os.path.join(zip_dir, 'Ghidra.zip')
-        with open(zip_path, 'wb') as f:
-            f.write(ghidra_content)
-        subprocess.run(f'unzip -d "{dest_path}" "{zip_path}"', shell=True)
-    print("[+] Extracted to {}".format(dest_path))
+    if args.path.is_file():
+        print("[+] Opening {}".format(args.path))
+        with open(args.path, 'rb') as f:
+            ghidra_content = f.read()
+        print("[+] Extracting...")
+        with tempfile.TemporaryDirectory() as zip_dir:
+            zip_path = os.path.join(zip_dir, 'Ghidra.zip')
+            with open(zip_path, 'wb') as f:
+                f.write(ghidra_content)
+            subprocess.run(f'unzip -d "{dest_path}" "{zip_path}"', shell=True)
+        print("[+] Extracted to {}".format(dest_path))
+    elif args.path.is_dir():
+        print("[+] Copying...")
+        shutil.copytree(args.path, dest_path / args.path.name)
+        print("[+] Copied to {}".format(dest_path / args.path.name))
+
+    if args.jdk:
+        jdk_path = dest_path / "jdk"
+        if args.jdk.is_file():
+            print("[+] Opening {}".format(args.jdk))
+            with open(args.jdk, 'rb') as f:
+                jdk_content = f.read()
+            print("[+] Extracting...")
+            with tempfile.TemporaryDirectory() as zip_dir:
+                zip_path = os.path.join(zip_dir, 'JDK.zip')
+                with open(zip_path, 'wb') as f:
+                    f.write(jdk_content)
+                subprocess.run(
+                    f'unzip -d "{jdk_path}" "{zip_path}"', shell=True)
+            print("[+] Extracted to {}".format(jdk_path))
+        if args.jdk.is_dir():
+            print("[+] Copying...")
+            shutil.copytree(args.jdk, jdk_path)
+            print("[+] Copied to {}".format(jdk_path))
 
     if args.dmg:
         print("[+] Building dmg")

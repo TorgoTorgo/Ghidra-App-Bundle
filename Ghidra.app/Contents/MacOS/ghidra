@@ -25,4 +25,4 @@ if [ -d "${GHIDRA_PATCH_DIR}" ]; then
 fi
 
 # Launch Ghidra
-"${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
+PATH="${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
