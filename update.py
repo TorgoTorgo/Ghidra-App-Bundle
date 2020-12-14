@@ -97,8 +97,10 @@ with tempfile.TemporaryDirectory() as tmp_dir:
                 zip_path = os.path.join(zip_dir, 'JDK.zip')
                 with open(zip_path, 'wb') as f:
                     f.write(jdk_content)
-                subprocess.run(
-                    f'unzip -d "{jdk_path}" "{zip_path}"', shell=True)
+                with tempfile.TemporaryDirectory() as jdk_tmp_dir:
+                    subprocess.run(
+                        f'unzip -d "{jdk_tmp_dir}" "{zip_path}"', shell=True)
+                    shutil.copytree(next(Path(jdk_tmp_dir).glob('*')), jdk_path)
             print("[+] Extracted to {}".format(jdk_path))
         if args.jdk.is_dir():
             print("[+] Copying...")
