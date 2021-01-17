@@ -1,2 +1,1 @@
-requests
-dmgbuild
+Ghidra.app/Contents/Resources/requirements.txt
