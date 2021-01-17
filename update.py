@@ -13,6 +13,12 @@ from pathlib import Path
 
 import plistlib
 
+try:
+    from bs4 import BeautifulSoup
+    have_bs4 = True
+except ImportError:
+    have_bs4 = False
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', help='Ghidra zip URL')
 parser.add_argument(
@@ -21,33 +27,39 @@ parser.add_argument('-d', '--dmg', action='store_true',
                     help='Construct a DMG file for distribution')
 parser.add_argument('-t', '--tar', action='store_true',
                     help='Construct a tar file for distribution')
-parser.add_argument('-v', '--version', dest='version',
+parser.add_argument('-v', '--version', dest='version', required=False,
                     help='Set the version for the dmg. Eg: "9.1 BETA"')
+parser.add_argument('--app', type=Path, required=False, help='Do an in place upgrade of an app bundle')
 parser.add_argument(
     '-j', '--jdk', help='Path to a JDK directory to bundle', type=Path)
 
 args = parser.parse_args()
+
+if have_bs4 and not args.url and not args.path:
+    print("No URL or path provided, getting latest from ghidra-sre.org")
+    r = requests.get('https://ghidra-sre.org/')
+    s = BeautifulSoup(r.content, 'html.parser')
+    for link in s.find_all('a'):
+        if link.get('href', default='').endswith('.zip'):
+            args.url = 'https://ghidra-sre.org/{}'.format(link['href'])
+
 with tempfile.TemporaryDirectory() as tmp_dir:
     shutil.copytree('Ghidra.app', os.path.join(tmp_dir, 'Ghidra.app'))
     os.symlink('/Applications', os.path.join(tmp_dir, 'Applications'))
 
-    out_app = Path(tmp_dir, 'Ghidra.app')
+    if args.app:
+        out_app = args.app
+    else:
+        out_app = Path(tmp_dir, 'Ghidra.app')
     contents_path = out_app.joinpath('Contents')
     dest_path = contents_path.joinpath('Resources')
     ghidra_content = None
-
-    if args.version:
-        # Set the version in the plist if possible
-        print(f"[+] Setting bundle version to {args.version.split()[0]}")
-        with open(contents_path.joinpath('Info.plist'), 'rb') as plist_file:
-            info = plistlib.loads(plist_file.read())
-        info['CFBundleVersion'] = args.version.split()[0]
-        with open(contents_path.joinpath('Info.plist'), 'wb') as plist_file:
-            plistlib.dump(info, plist_file)
+    ghidra_zip_name = None
 
     if args.url:
         print("[+] Downloading {}".format(args.url))
         download = requests.get(args.url)
+        ghidra_zip_name = Path(args.url).name
 
         if download.status_code == 200:
             ghidra_content = download.content
@@ -56,9 +68,26 @@ with tempfile.TemporaryDirectory() as tmp_dir:
             sys.exit(1)
     elif args.path:
         print("[-] Will use Ghidra from {}".format(args.path))
+        ghidra_zip_name = Path(args.path).name
     else:
         print("[!] Neither path nor url were specified!")
         sys.exit(1)
+
+    # calculate the name from a path
+    if ghidra_zip_name:
+        version = ghidra_zip_name.split('ghidra_')[1].split('_')[0]
+    if args.version:
+        version = args.version
+    
+
+    if version:
+        # Set the version in the plist if possible
+        print(f"[+] Setting bundle version to {version.split()[0]}")
+        with open(contents_path.joinpath('Info.plist'), 'rb') as plist_file:
+            info = plistlib.loads(plist_file.read())
+        info['CFBundleVersion'] = version.split()[0]
+        with open(contents_path.joinpath('Info.plist'), 'wb') as plist_file:
+            plistlib.dump(info, plist_file)
 
     if args.url:
        print("[+] Extracting...")
