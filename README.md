@@ -13,12 +13,19 @@ Click one of the CI pipeline buttons above to download the prebuilt bundles.
 
 ## Building
 
-Building is simple, the quickest way to get started is to just point
-update.py to the Ghidra zip you want to bundle.
+Building is simple, the quickest way to get started is to run `./update.py --dmg`. This will download the latest Ghidra by scraping the https://ghidra-sre.org site.
 
 ```bash
 pip3 install -r requirements.txt
-./update.py --dmg --version "9.0.4" --url https://ghidra-sre.org/ghidra_9.0.4_PUBLIC_20190516.zip
+./update.py --dmg
+open Ghidra*.dmg
+```
+
+To install a specific version you can specify a URL or a local path.
+
+```bash
+pip3 install -r requirements.txt
+./update.py --version "9.2.2" --url "https://ghidra-sre.org/ghidra_9.2.2_PUBLIC_20201229.zip"
 open Ghidra*.dmg
 ```
 
@@ -30,5 +37,5 @@ JDK. In the example below we use the [JDK from Zulu](https://www.azul.com/downlo
 ```bash
 pip3 install -r requirements.txt
 curl -o zulu_jdk.zip 'https://cdn.azul.com/zulu/bin/zulu16.0.65-ea-jdk16.0.0-ea.24-macos_aarch64.zip'
-./update.py --tar --version 9.2 --url 'https://ghidra-sre.org/ghidra_9.2_PUBLIC_20201113.zip' --jdk zulu_jdk.zip
+./update.py --tar --jdk zulu_jdk.zip
 ```
