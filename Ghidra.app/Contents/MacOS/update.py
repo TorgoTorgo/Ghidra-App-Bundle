@@ -40,7 +40,7 @@ args = parser.parse_args()
 if not args.app:
     # Maybe we are being run from within the bundle
     us = Path(__file__)
-    for d in us.parents():
+    for d in us.parents:
         if d.name == 'Contents':
             if d.parent.suffix == '.app':
                 args.app = d.parent
