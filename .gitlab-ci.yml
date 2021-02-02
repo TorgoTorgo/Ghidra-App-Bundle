@@ -13,6 +13,18 @@ stages:
         paths:
             - '*.dmg'
 
+Ghidra 9.2.2:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.2.2_PUBLIC_20201229.zip
+        VERSION: "9.2.2"
+
+Ghidra 9.2.1:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.2.1_PUBLIC_20201215.zip
+        VERSION: "9.2.1"
+
 Ghidra 9.2:
     extends: .dmg
     variables:
