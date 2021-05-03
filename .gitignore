@@ -1,3 +1,4 @@
 Ghidra.dmg
 *.zip
 *.tar.gz
+.DS_Store

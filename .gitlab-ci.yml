@@ -12,6 +12,11 @@ stages:
     artifacts:
         paths:
             - '*.dmg'
+Ghidra 9.2.3:
+    extends: .dmg
+    variables:
+        URL: https://ghidra-sre.org/ghidra_9.2.3_PUBLIC_20210325.zip
+        VERSION: "9.2.3"
 
 Ghidra 9.2.2:
     extends: .dmg

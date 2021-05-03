@@ -17,6 +17,8 @@ jobs:
     strategy:
       matrix:
         ghidra:
+          - version: "9.2.3"
+            url: "https://ghidra-sre.org/ghidra_9.2.3_PUBLIC_20210325.zip"
           - version: "9.2.2"
             url: "https://ghidra-sre.org/ghidra_9.2.2_PUBLIC_20201229.zip"
           - version: "9.2.1"
