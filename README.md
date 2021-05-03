@@ -25,7 +25,7 @@ To install a specific version you can specify a URL or a local path.
 
 ```bash
 pip3 install -r requirements.txt
-./update.py --version "9.2.2" --url "https://ghidra-sre.org/ghidra_9.2.2_PUBLIC_20201229.zip"
+./update.py --dmg --version "9.2.2" --url "https://ghidra-sre.org/ghidra_9.2.2_PUBLIC_20201229.zip"
 open Ghidra*.dmg
 ```
 
