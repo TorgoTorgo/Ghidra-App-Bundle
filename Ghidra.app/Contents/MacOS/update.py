@@ -172,7 +172,7 @@ with tempfile.TemporaryDirectory() as tmp_dir:
                 f'genisoimage -V "{name}" -D -R -apple -no-pad -o "{name}.dmg" "{tmp_dir}"', shell=True, check=True)
         except subprocess.CalledProcessError:
             subprocess.run(
-                f'hdiutil create -volname "{name}" -fs HFS+  -srcfolder "{tmp_dir}" {name}.dmg', shell=True, check=True)
+                f'hdiutil create -volname "{name}" -fs HFS+  -srcfolder "{tmp_dir}" "{name}.dmg"', shell=True, check=True)
         print(f"[+] Built {name}.dmg")
     elif args.tar:
         print("[+] Building tar")
