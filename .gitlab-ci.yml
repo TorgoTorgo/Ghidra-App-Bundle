@@ -12,6 +12,19 @@ stages:
     artifacts:
         paths:
             - '*.dmg'
+
+Ghidra 10.0:
+    extends: .dmg
+    variables:
+        URL: https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.0_build/ghidra_10.0_PUBLIC_20210621.zip
+        VERSION: "10.0"
+
+Ghidra 9.2.4:
+    extends: .dmg
+    variables:
+        URL: https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_9.2.4_build/ghidra_9.2.4_PUBLIC_20210427.zip
+        VERSION: "9.2.4"
+
 Ghidra 9.2.3:
     extends: .dmg
     variables:
