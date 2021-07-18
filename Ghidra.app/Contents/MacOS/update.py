@@ -13,14 +13,8 @@ from pathlib import Path
 
 import plistlib
 
-try:
-    from bs4 import BeautifulSoup
-    have_bs4 = True
-except ImportError:
-    have_bs4 = False
-
 parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--url', help='Ghidra zip URL')
+parser.add_argument('-u', '--url', help='Ghidra zip URL. Defaults to latest from Github')
 parser.add_argument(
     '-p', '--path', help='Path to Ghidra zip or install', type=Path)
 parser.add_argument('-d', '--dmg', action='store_true',
@@ -60,13 +54,14 @@ with tempfile.TemporaryDirectory() as tmp_dir:
     ghidra_content = None
     ghidra_zip_name = None
 
-    if have_bs4 and not args.url and not args.path:
-        print("No URL or path provided, getting latest from ghidra-sre.org")
-        r = requests.get('https://ghidra-sre.org/')
-        s = BeautifulSoup(r.content, 'html.parser')
-        for link in s.find_all('a'):
-            if link.get('href', default='').endswith('.zip'):
-                args.url = 'https://ghidra-sre.org/{}'.format(link['href'])
+    if not args.url and not args.path:
+        print("[!] No URL or path provided, getting latest from github")
+        r = requests.get('https://api.github.com/repos/nationalsecurityagency/ghidra/releases')
+        releases = r.json()
+        release = releases[0] # The latest release
+        args.version = release["name"].split(" ")[1]
+        args.url = release["assets"][0]["browser_download_url"]
+        print(f"[+] Fetching {args.version} from {args.url}")
 
     if args.path:
         print("[-] Will use Ghidra from {}".format(args.path))
@@ -182,3 +177,5 @@ with tempfile.TemporaryDirectory() as tmp_dir:
         name = name.replace(' ', '_')
         subprocess.run(
             f'tar -cvzf "{name}.tar.gz" -C "{tmp_dir}" .', shell=True)
+    else:
+        print("[!] No output format specified. Please specify either --dmg or --tar")

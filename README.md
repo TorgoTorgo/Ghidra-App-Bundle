@@ -13,7 +13,7 @@ Click one of the CI pipeline buttons above to download the prebuilt bundles.
 
 ## Building
 
-Building is simple, the quickest way to get started is to run `./update.py --dmg`. This will download the latest Ghidra by scraping the https://ghidra-sre.org site.
+Building is simple, the quickest way to get started is to run `./update.py --dmg`. This will download the latest Ghidra from Github.
 
 ```bash
 pip3 install -r requirements.txt
