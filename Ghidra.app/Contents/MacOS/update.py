@@ -13,6 +13,20 @@ from pathlib import Path
 
 import plistlib
 
+
+def getReleases():
+    r = requests.get('https://api.github.com/repos/nationalsecurityagency/ghidra/releases')
+    releases = r.json()
+    releases = sorted(releases, key=lambda x: x["created_at"], reverse=True)
+    return releases
+
+def listVersions():
+    releases = getReleases()
+    for release in releases:
+        vers = release["name"].split(" ")[1]
+        print(f"\t{vers}")
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', help='Ghidra zip URL. Defaults to latest from Github')
 parser.add_argument(
@@ -27,9 +41,14 @@ parser.add_argument('--app', type=Path, required=False, help='Do an in place upg
 parser.add_argument(
     '-j', '--jdk', help='Path to a JDK directory to bundle', type=Path)
 parser.add_argument('--extension', type=Path, nargs='*', help='Path to a Ghidra extension zip to install')
+parser.add_argument('--list-versions', action='store_true', help='Print available Ghidra versions')
 
 args = parser.parse_args()
 
+if args.list_versions:
+    print("[+] Available Ghidra versions from Github:")
+    listVersions()
+    exit(0)
 
 if not args.app:
     # Maybe we are being run from within the bundle
@@ -54,14 +73,26 @@ with tempfile.TemporaryDirectory() as tmp_dir:
     ghidra_content = None
     ghidra_zip_name = None
 
-    if not args.url and not args.path:
+    if not args.url and not args.path and not args.version:
         print("[!] No URL or path provided, getting latest from github")
-        r = requests.get('https://api.github.com/repos/nationalsecurityagency/ghidra/releases')
-        releases = r.json()
+        releases = getReleases()
         release = releases[0] # The latest release
         args.version = release["name"].split(" ")[1]
         args.url = release["assets"][0]["browser_download_url"]
         print(f"[+] Fetching {args.version} from {args.url}")
+    elif args.version and not args.url and not args.path:
+        # If we have a version and not a path or URL, we'll get that specific release
+        releases = getReleases()
+        for release in releases:
+            if args.version in release["name"]:
+                # Found it
+                args.url = release["assets"][0]["browser_download_url"]
+                print(f"[+] Found version {args.version} on Github @ {args.url}")
+        if not args.url:
+            print(f"[!] Failed to find version {args.version} on Github. Found:")
+            listVersions()
+            exit(1)
+
 
     if args.path:
         print("[-] Will use Ghidra from {}".format(args.path))

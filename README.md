@@ -21,7 +21,16 @@ pip3 install -r requirements.txt
 open Ghidra*.dmg
 ```
 
-To install a specific version you can specify a URL or a local path.
+To install a specific version you can specify a version on the command line, or a URL/local path.
+
+```bash
+pip3 install -r requirements.txt
+./update.py --list-versions
+# A list of versions will be printed
+./update.py --dmg --version "10.0.1"
+```
+
+To install a specific version from a custom URL:
 
 ```bash
 pip3 install -r requirements.txt
