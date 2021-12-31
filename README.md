@@ -38,13 +38,25 @@ pip3 install -r requirements.txt
 open Ghidra*.dmg
 ```
 
-### Apple Silicon
+### Python3 (and more!) with Graal and Ghidraal
 
-You can use the JDK bundling feature to include an Apple Silicon compatible
-JDK. In the example below we use the [JDK from Zulu](https://www.azul.com/downloads/zulu-community/?os=macos&architecture=arm-64-bit&package=jdk).
+Building a bundle with:
 
-```bash
-pip3 install -r requirements.txt
-curl -o zulu_jdk.zip 'https://cdn.azul.com/zulu/bin/zulu16.0.65-ea-jdk16.0.0-ea.24-macos_aarch64.zip'
-./update.py --tar --jdk zulu_jdk.zip
+```sh
+./update.py --graal
 ```
+
+builds Ghidra and bundles the [GraalVM](https://www.graalvm.org), a
+drop in replacement for OpenJDK that provides polyglot support for
+Python3, R, NodeJS, etc. It also installs the [Ghidraal extension](https://github.com/jpleasu/ghidraal)
+which installs scripting support for a number of GraalVM supported languages.
+
+Once the bundle has been built, open the code browser tool and then open File, Configure Extensions,
+and open the Experimental section. From there check the box for Ghidraal, close the extensions window
+and click File, Save Tool to save your changes.
+
+Once the Ghidraal extension is enabled you'll find a "Ghidraal" category in the script browser with
+examples of Python3, NodeJS, and other scripts. You may have some issues with python2 scripts, but the
+2to3 tool can solve many of these.
+
+

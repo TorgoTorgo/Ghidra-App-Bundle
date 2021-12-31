@@ -25,4 +25,7 @@ if [ -d "${GHIDRA_PATCH_DIR}" ]; then
 fi
 
 # Launch Ghidra
+if [ -d "${RESOURCES_DIR}/jdk" ]; then
+	export JAVA_HOME=${RESOURCES_DIR}/jdk
+fi
 PATH="${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
