@@ -15,8 +15,11 @@ from pathlib import Path
 import plistlib
 
 our_dir = Path(__file__).resolve().parent
-download_dir = Path.home().joinpath("Downloads", "Ghidra-App-Bundle-Downloads")
-download_dir.mkdir(exist_ok=True)
+if Path.home().joinpath("Downloads").exists():
+    download_dir = Path.home().joinpath("Downloads", "Ghidra-App-Bundle-Downloads")
+else:
+    download_dir = Path("/tmp").joinpath("Ghidra-App-Bundle-Downloads")
+download_dir.mkdir(parents=True, exist_ok=True)
 print(f"[+] Downloads will be cached to {download_dir}")
 
 def download_file(url: str, filename: str = None) -> Path:
