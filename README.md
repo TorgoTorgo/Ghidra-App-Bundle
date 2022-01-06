@@ -38,7 +38,7 @@ pip3 install -r requirements.txt
 open Ghidra*.dmg
 ```
 
-### Python3 (and more!) with Graal and Ghidraal
+### Experimental Python3 (and more!) with Graal and Ghidraal
 
 Building a bundle with:
 
@@ -47,7 +47,7 @@ Building a bundle with:
 ```
 
 builds Ghidra and bundles the [GraalVM](https://www.graalvm.org), a
-drop in replacement for OpenJDK that provides polyglot support for
+drop in replacement for OpenJDK that provides experimental polyglot support for
 Python3, R, NodeJS, etc. It also installs the [Ghidraal extension](https://github.com/jpleasu/ghidraal)
 which installs scripting support for a number of GraalVM supported languages.
 
@@ -59,4 +59,4 @@ Once the Ghidraal extension is enabled you'll find a "Ghidraal" category in the 
 examples of Python3, NodeJS, and other scripts. You may have some issues with python2 scripts, but the
 2to3 tool can solve many of these.
 
-
+Note that at the time of writing, [Graal's Python3 support is not sufficient for most packages](https://github.com/oracle/graalpython/issues/228) and some language features, such as asyncio, are not supported. It might still be useful to have things such as type hints and fstrings however.
