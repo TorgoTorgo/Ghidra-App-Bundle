@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from datetime import datetime
 import glob
 import os
 import shutil
@@ -10,6 +11,7 @@ import sys
 import tempfile
 import io
 import requests
+import time
 from pathlib import Path
 
 import plistlib
@@ -33,10 +35,25 @@ def download_file(url: str, filename: str = None) -> Path:
                 shutil.copyfileobj(r.raw, f)
     return dest
 
+def wait_out_rate_limit():
+    # Check we aren't annoying GitHub
+    r = requests.get(f"https://api.github.com/rate_limit")
+    result = r.json()
+    if result["rate"]["remaining"] == 0:
+        reset_date = datetime.fromtimestamp(result["rate"]["reset"])
+        wait_seconds = reset_date - datetime.now()
+        print(f"Rate limit hit, resets at {reset_date}. Waiting {wait_seconds} before continuing.")
+        time.sleep(wait_seconds.seconds + 5)
+        print(f"Waited {wait_seconds}. Continuing.")
+
 def get_github_releases(project: str):
+    wait_out_rate_limit()
     r = requests.get(f'https://api.github.com/repos/{project}/releases')
     releases = r.json()
-    releases = sorted(releases, key=lambda x: x["created_at"], reverse=True)
+    try:
+        releases = sorted(releases, key=lambda x: x["created_at"], reverse=True)
+    except TypeError:
+        raise TypeError(f"{releases}")
     return releases
 
 def get_ghidra_releases():
@@ -54,6 +71,14 @@ def clone_repository(git_url: str, destination: Path) -> Path:
     assert destination.exists()
     return destination
 
+def update_repository(git_repo: Path):
+    subprocess.check_call(f"git remote update", cwd=git_repo, shell=True)
+
+def checkout_branch(git_repo: Path, branch: str, update: bool = True):
+    subprocess.check_call(f"git checkout {branch}", cwd=git_repo, shell=True)
+    if update:
+        subprocess.check_call(f"git pull --autostash --ff-only", cwd=git_repo, shell=True)
+
 def build_ghidra_extension(ghidra_home: Path, extension_path: Path, java_home: Path = None) -> Path:
     # Here we'll build the extension for our Ghidra version, and return a path
     # to the distribution zip file
@@ -70,6 +95,57 @@ def build_ghidra_extension(ghidra_home: Path, extension_path: Path, java_home: P
     distribution_zip = next(extension_path.joinpath("dist").glob('*.zip'))
     return distribution_zip
 
+def build_llvm(ghidra_home: Path, java_home: Path, llvm_home: Path = download_dir.joinpath("llvm-project")):
+    # Get the llvm source
+    if not llvm_home.exists():
+        print("[+] Cloning llvm-project. This may take some time...")
+        clone_repository("https://github.com/llvm/llvm-project.git", llvm_home)
+    checkout_branch(git_repo=llvm_home, branch="release/13.x", update=True)
+
+    print("[+] Setting up codesigning certificate for llvm-project")
+    subprocess.check_call(f'lldb/scripts/macos-setup-codesign.sh', cwd=llvm_home, shell=True)
+
+    build_path = llvm_home.joinpath("build")
+    build_path.mkdir(parents=True, exist_ok=True)
+
+    swig_path = ghidra_home.joinpath("Ghidra", "Debug", "Debugger-swig-lldb")
+    print(f"[+] Checking for swig {swig_path}")
+    if not swig_path.exists():
+        print("[!] The selected version of Ghidra does not appear to support the Ghidra Debugger, or this script is out of date.")
+        print(f"[!] Check {swig_path} exists")
+    # If this doesn't exist, Ghidra doesn't support the debugger
+    assert swig_path.exists()
+
+    for req in ["swig", "ninja", "cmake"]:
+        print(f"[-] Checking {req} is installed. If it isn't, install with 'brew install {req}'")
+        subprocess.check_call(f"which {req}", shell=True)
+
+    # Build LLVM
+    print("[+] Generating build configuration")
+    subprocess.check_call(f'cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;libcxx;lldb;debugserver" -DCMAKE_BUILD_TYPE=Release -DLLDB_USE_SYSTEM_DEBUGSERVER=1 ../llvm',
+                          cwd=build_path,
+                          shell=True)
+    print("[+] Building, this may take some time")
+    subprocess.check_call(f'ninja lldb lldb-server debugserver', cwd=build_path, shell=True)
+    subprocess.check_call(f'ninja lldb-server', cwd=build_path, shell=True)
+    subprocess.check_call(f'ninja debugserver', cwd=build_path, shell=True)
+
+    # Build the LLDB SWIG definitions
+    subprocess.check_call(f'gradle build --info',
+                          env=os.environ.update({
+                              "LLVM_HOME": str(llvm_home),
+                              "LLVM_BUILD": str(build_path),
+                          }),
+                          cwd=swig_path,
+                          shell=True)
+    swig_build = swig_path.joinpath("build")
+    assert swig_build.exists()
+
+    # Copy the build llvm components and the generated SWIG dylib for JNI/Java into the right spots
+
+    # Add the load paths for the llvm libs to the Ghidra launch.properties
+
+    # Add the binaries to the path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', help='Ghidra zip URL. Defaults to latest from Github')
@@ -84,6 +160,8 @@ parser.add_argument('-v', '--version', dest='version', required=False,
 parser.add_argument('--app', type=Path, required=False, help='Do an in place upgrade of an app bundle')
 parser.add_argument('--extension', type=Path, default=[], nargs='*', help='Path to a Ghidra extension zip to install')
 parser.add_argument('--list-versions', action='store_true', help='Print available Ghidra versions')
+
+parser.add_argument('--lldb', action='store_true', help='Build lldb for use with the Ghidra debugger')
 
 jdk_group = parser.add_mutually_exclusive_group()
 jdk_group.add_argument(
@@ -289,6 +367,15 @@ with tempfile.TemporaryDirectory() as tmp_dir:
         for extension in args.extension:
             print("[+] Installing extension: {extension}")
             subprocess.run(f'unzip -d "{extension_dir}" "{extension}"', shell=True)
+
+    if args.lldb:
+        print("[+] Building llvm")
+        try:
+            build_llvm(ghidra_home=ghidra_install_dir, java_home=jdk_path)
+        except subprocess.CalledProcessError as e:
+            print("[!] Failed to build, check the logs for more detail.")
+            print("[!] If you see an error about finding clang, check Xcode is installed and selected with xcode-select")
+            raise e
 
 
     if args.dmg or not args.tar:

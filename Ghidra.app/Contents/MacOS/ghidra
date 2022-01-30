@@ -16,6 +16,7 @@ SCRIPT_FILE="$(readlink -f "$0" 2>/dev/null || readlink "$0" 2>/dev/null || grea
 SCRIPT_DIR="${SCRIPT_FILE%/*}"
 
 RESOURCES_DIR="${SCRIPT_DIR}/../Resources"
+MACOS_DIR="${SCRIPT_DIR}/"
 SCRIPT_DIR=$(ls -1 ${RESOURCES_DIR}/*/ghidraRun | while read GHIDRA_RUN_PATH; do echo ${GHIDRA_RUN_PATH%/ghidraRun}; done | sort -V | tail -n1)
 
 GHIDRA_PATCH_DIR="${SCRIPT_DIR%/*}_patch"
@@ -28,4 +29,4 @@ fi
 if [ -d "${RESOURCES_DIR}/jdk" ]; then
 	export JAVA_HOME=${RESOURCES_DIR}/jdk
 fi
-PATH="${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
+PATH="${MACOS_DIR}:${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
