@@ -28,4 +28,4 @@ fi
 if [ -d "${RESOURCES_DIR}/jdk" ]; then
 	export JAVA_HOME=${RESOURCES_DIR}/jdk
 fi
-PATH="${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg Ghidra "${MAXMEM}" "" ghidra.GhidraRun
+PATH="${RESOURCES_DIR}/jdk/bin:${PATH}" "${SCRIPT_DIR}"/support/launch.sh fg jre Ghidra "${MAXMEM}" "" ghidra.GhidraRun
