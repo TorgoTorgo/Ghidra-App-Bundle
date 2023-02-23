@@ -38,6 +38,15 @@ pip3 install -r requirements.txt
 open Ghidra*.dmg
 ```
 
+### Embedding OpenJDK
+
+To embed OpenJDK into the bundle, first download the appropriate [OpenJDK](https://jdk.java.net/19/) for your platform and then use the following command:
+
+```bash
+pip3 install -r requirements.txt
+./update.py --dmg --jdk ~/Downloads/jdk-19.0.2.jdk/Contents/Home
+```
+
 ### Experimental Python3 (and more!) with Graal and Ghidraal
 
 Building a bundle with:
